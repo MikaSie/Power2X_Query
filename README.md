@@ -1,5 +1,5 @@
 # Power2X_Query
-![Model](Power2X-Logo.png)
+![Model](docs/Power2X-Logo.png)
 
 
 
