@@ -1,9 +1,11 @@
 import streamlit as st
+from PIL import Image
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader
 from langchain.text_splitter import CharacterTextSplitter
 
-def get_pdf_text(pdf_docs: List[pdf]) -> str:
+
+def get_pdf_text(pdf_docs: list) -> str:
   """Takes pdf documents and returns raw texts.
 
   Parameters:
@@ -33,8 +35,12 @@ def get_text_chunks(raw_text):
 
 
 def main():
+
   st.set_page_config(page_title = "Power2X Query Tool",
-                     page_icon = st.image('Power2X_Query/Power2X-Logo.png'))
+                     page_icon = 'docs/Power2X-Logo.png')
+  
+  with st.columns(3)[1]:
+    st.image('docs/Power2X-Logo.png', width= 200)
 
   st.header("Use this tool to query PDF files")
   st.text_input("Ask a question here")
