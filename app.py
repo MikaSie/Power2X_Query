@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 from langchain.embeddings import OpenAIEmbeddings, HuggingFaceInstructEmbeddings
 from langchain.vectorstores import FAISS
 from dotenv import load_dotenv
@@ -10,7 +11,10 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from langchain.llms import HuggingFaceHub
 from InstructorEmbedding import INSTRUCTOR
+from htmlTemplates import css, bot_template, user_template
 
+
+#TODO: LOAD API KEY, FIX REPONSE, FIX SPEED OF LLM
 
 def get_pdf_text(pdf_docs):
   """Takes pdf documents and returns raw texts.
@@ -47,7 +51,7 @@ def get_text_chunks(raw_text, tokenizer):
   """
   text_splitter = RecursiveCharacterTextSplitter.from_huggingface_tokenizer(
     tokenizer, 
-    chunk_size=505, 
+    chunk_size=200, 
     chunk_overlap=50)
   
   chunks = text_splitter.split_text(raw_text)
@@ -76,9 +80,12 @@ def get_conversation_chain(vector_store):
   """Takes a vector store and
   
   """
+  #TODO: HIER AANPASSEN NAAR 
 
-  llm = AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-xxl")
-
+  #llm = AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-xxl")
+  key = os.getenv("HUGGINGFACE_API_TOKEN")
+  
+  llm = HuggingFaceHub(repo_id = 'google/flan-t5-xxl', huggingfacehub_api_token= key, model_kwargs={"temperature":0.5, 'max_length':512})
   memory = ConversationBufferMemory(memory_key= 'chat_history', return_messages= True)
 
   conversation_chain = ConversationalRetrievalChain.from_llm(
@@ -93,15 +100,16 @@ def get_conversation_chain(vector_store):
 
 
 def handle_userinput(user_question):
-  """########
-  
-  Parameters:
-    user_question:
-  """
-  response = st.session_state.conversation({'question': user_question})
-  st.session_state.chat_history = response['chat_history']
+    response = st.session_state.conversation({'question': user_question})
+    st.session_state.chat_history = response['chat_history']
 
-  return response
+    for i, message in enumerate(st.session_state.chat_history):
+        if i % 2 == 0:
+            st.write(user_template.replace(
+                "{{MSG}}", message.content), unsafe_allow_html=True)
+        else:
+            st.write(bot_template.replace(
+                "{{MSG}}", message.content), unsafe_allow_html=True)
 
 
 def main():
@@ -126,14 +134,6 @@ def main():
   user_question = st.text_input("Ask a question about your document:")
   if user_question:
     response = handle_userinput(user_question)
-
-    with st.expander('Response object'):
-      st.write(response)
-
-    with st.expander("Source text"):
-      st.write(response.get_formatted_sources())
-  #st.text_input("Ask a question here")
-  
 
   with st.sidebar:
     st.subheader("Your documents")
